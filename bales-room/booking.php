@@ -27,26 +27,37 @@ $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $booking_date = $_POST['booking_date'] ?? '';
+    $check_in_date = $_POST['check_in_date'] ?? '';
+    $check_out_date = $_POST['check_out_date'] ?? '';
     $payment_method = $_POST['payment_method'] ?? '';
 
     if (!$booking_date) {
         $errors[] = 'Tanggal booking harus diisi.';
     }
+    if (!$check_in_date) {
+        $errors[] = 'Tanggal check-in harus diisi.';
+    }
+    if (!$check_out_date) {
+        $errors[] = 'Tanggal check-out harus diisi.';
+    }
+    if (strtotime($check_out_date) <= strtotime($check_in_date)) {
+        $errors[] = 'Tanggal check-out harus lebih besar dari tanggal check-in.';
+    }
     if (!$payment_method || !in_array($payment_method, ['transfer', 'cash'])) {
         $errors[] = 'Metode pembayaran harus dipilih.';
     } else {
-        // Cek apakah sudah ada booking untuk kamar dan tanggal tersebut dengan status pending atau confirmed
-        $stmt = $pdo->prepare('SELECT * FROM bookings WHERE room_id = ? AND booking_date = ? AND status IN ("pending", "confirmed")');
-        $stmt->execute([$room_id, $booking_date]);
+        // Cek apakah sudah ada booking untuk kamar dan tanggal yang bertabrakan dengan status pending atau confirmed
+        $stmt = $pdo->prepare('SELECT * FROM bookings WHERE room_id = ? AND status IN ("pending", "confirmed") AND ((check_in_date <= ? AND check_out_date > ?) OR (check_in_date < ? AND check_out_date >= ?))');
+        $stmt->execute([$room_id, $check_in_date, $check_in_date, $check_out_date, $check_out_date]);
         if ($stmt->fetch()) {
-            $errors[] = 'Maaf, kamar sudah dibooking pada tanggal tersebut.';
+            $errors[] = 'Maaf, kamar sudah dibooking pada tanggal yang Anda pilih.';
         }
     }
 
     if (empty($errors)) {
         // Simpan booking dengan status pending dan metode pembayaran
-        $stmt = $pdo->prepare('INSERT INTO bookings (user_id, room_id, booking_date, status, payment_method, payment_status) VALUES (?, ?, ?, "pending", ?, "unpaid")');
-        $stmt->execute([$_SESSION['user_id'], $room_id, $booking_date, $payment_method]);
+        $stmt = $pdo->prepare('INSERT INTO bookings (user_id, room_id, booking_date, check_in_date, check_out_date, status, payment_method, payment_status) VALUES (?, ?, ?, ?, ?, "pending", ?, "unpaid")');
+        $stmt->execute([$_SESSION['user_id'], $room_id, $booking_date, $check_in_date, $check_out_date, $payment_method]);
         $success = true;
     }
 }
@@ -89,6 +100,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <form method="POST" action="booking.php?room_id=<?=htmlspecialchars($room_id)?>" novalidate>
     <label for="booking_date" class="block mb-2 font-semibold">Tanggal Booking</label>
     <input type="date" id="booking_date" name="booking_date" required class="w-full mb-4 px-3 py-2 border rounded" />
+    <label for="check_in_date" class="block mb-2 font-semibold">Tanggal Check-in</label>
+    <input type="date" id="check_in_date" name="check_in_date" required class="w-full mb-4 px-3 py-2 border rounded" />
+    <label for="check_out_date" class="block mb-2 font-semibold">Tanggal Check-out</label>
+    <input type="date" id="check_out_date" name="check_out_date" required class="w-full mb-4 px-3 py-2 border rounded" />
     <label for="payment_method" class="block mb-2 font-semibold">Metode Pembayaran</label>
     <select id="payment_method" name="payment_method" required class="w-full mb-6 px-3 py-2 border rounded">
         <option value="">-- Pilih Metode Pembayaran --</option>
