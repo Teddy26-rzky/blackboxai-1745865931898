@@ -27,9 +27,13 @@ $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $booking_date = $_POST['booking_date'] ?? '';
+    $payment_method = $_POST['payment_method'] ?? '';
 
     if (!$booking_date) {
         $errors[] = 'Tanggal booking harus diisi.';
+    }
+    if (!$payment_method || !in_array($payment_method, ['transfer', 'cash'])) {
+        $errors[] = 'Metode pembayaran harus dipilih.';
     } else {
         // Cek apakah sudah ada booking untuk kamar dan tanggal tersebut dengan status pending atau confirmed
         $stmt = $pdo->prepare('SELECT * FROM bookings WHERE room_id = ? AND booking_date = ? AND status IN ("pending", "confirmed")');
@@ -40,9 +44,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        // Simpan booking dengan status pending
-        $stmt = $pdo->prepare('INSERT INTO bookings (user_id, room_id, booking_date, status) VALUES (?, ?, ?, "pending")');
-        $stmt->execute([$_SESSION['user_id'], $room_id, $booking_date]);
+        // Simpan booking dengan status pending dan metode pembayaran
+        $stmt = $pdo->prepare('INSERT INTO bookings (user_id, room_id, booking_date, status, payment_method, payment_status) VALUES (?, ?, ?, "pending", ?, "unpaid")');
+        $stmt->execute([$_SESSION['user_id'], $room_id, $booking_date, $payment_method]);
         $success = true;
     }
 }
@@ -82,11 +86,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </ul>
             </div>
         <?php endif; ?>
-        <form method="POST" action="booking.php?room_id=<?=htmlspecialchars($room_id)?>" novalidate>
-            <label for="booking_date" class="block mb-2 font-semibold">Tanggal Booking</label>
-            <input type="date" id="booking_date" name="booking_date" required class="w-full mb-6 px-3 py-2 border rounded" />
-            <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 transition">Booking Sekarang</button>
-        </form>
+<form method="POST" action="booking.php?room_id=<?=htmlspecialchars($room_id)?>" novalidate>
+    <label for="booking_date" class="block mb-2 font-semibold">Tanggal Booking</label>
+    <input type="date" id="booking_date" name="booking_date" required class="w-full mb-4 px-3 py-2 border rounded" />
+    <label for="payment_method" class="block mb-2 font-semibold">Metode Pembayaran</label>
+    <select id="payment_method" name="payment_method" required class="w-full mb-6 px-3 py-2 border rounded">
+        <option value="">-- Pilih Metode Pembayaran --</option>
+        <option value="transfer">Transfer</option>
+        <option value="cash">Cash</option>
+    </select>
+    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 transition">Booking Sekarang</button>
+</form>
     </main>
 </body>
 </html>
