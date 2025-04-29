@@ -30,6 +30,8 @@ CREATE TABLE bookings (
     user_id INT NOT NULL,
     room_id INT NOT NULL,
     booking_date DATE NOT NULL,
+    check_in_date DATE DEFAULT NULL,
+    check_out_date DATE DEFAULT NULL,
     status ENUM('pending', 'confirmed', 'cancelled') NOT NULL DEFAULT 'pending',
     payment_method ENUM('transfer', 'cash') DEFAULT NULL,
     payment_status ENUM('unpaid', 'paid') DEFAULT 'unpaid',
