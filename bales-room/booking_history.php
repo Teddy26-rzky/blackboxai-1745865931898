@@ -50,6 +50,8 @@ $bookings = $stmt->fetchAll();
                         <th class="py-3 px-4 text-left">Kamar</th>
                         <th class="py-3 px-4 text-left">Tanggal Booking</th>
                         <th class="py-3 px-4 text-left">Status</th>
+                        <th class="py-3 px-4 text-left">Metode Bayar</th>
+                        <th class="py-3 px-4 text-left">Status Bayar</th>
                         <th class="py-3 px-4 text-left">Invoice</th>
                     </tr>
                 </thead>
@@ -59,6 +61,8 @@ $bookings = $stmt->fetchAll();
                             <td class="py-3 px-4"><?=htmlspecialchars($booking['room_name'])?></td>
                             <td class="py-3 px-4"><?=htmlspecialchars($booking['booking_date'])?></td>
                             <td class="py-3 px-4 capitalize"><?=htmlspecialchars($booking['status'])?></td>
+                            <td class="py-3 px-4"><?=htmlspecialchars($booking['payment_method'] ?? '-')?></td>
+                            <td class="py-3 px-4 capitalize"><?=htmlspecialchars($booking['payment_status'] ?? '-')?></td>
                             <td class="py-3 px-4">
                                 <?php if ($booking['invoice_url']): ?>
                                     <a href="<?=htmlspecialchars($booking['invoice_url'])?>" target="_blank" class="text-blue-600 hover:underline">Lihat Invoice</a>
