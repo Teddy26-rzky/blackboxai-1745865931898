@@ -31,6 +31,8 @@ CREATE TABLE bookings (
     room_id INT NOT NULL,
     booking_date DATE NOT NULL,
     status ENUM('pending', 'confirmed', 'cancelled') NOT NULL DEFAULT 'pending',
+    payment_method ENUM('transfer', 'cash') DEFAULT NULL,
+    payment_status ENUM('unpaid', 'paid') DEFAULT 'unpaid',
     invoice_url VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
